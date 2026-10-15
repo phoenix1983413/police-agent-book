@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>公共安全垂直大模型+警务智能体软件设计方案</title>
+<style>
+  /* 页面规则 */
+  @page {
+    size: A4;
+    margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+    @top-center {
+      content: "公共安全垂直大模型 + 警务行业智能体 — 软件设计方案";
+      font-family: "SimSun", "宋体";
+      font-size: 9pt;
+      color: #666;
+    }
+    @bottom-center {
+      content: "第 " counter(page) " 页";
+      font-family: "SimSun", "宋体";
+      font-size: 9pt;
+      color: #666;
+    }
+  }
+  @page cover {
+    @top-center { content: none; }
+    @bottom-center { content: none; }
+  }
+
+  /* 基础排版 */
+  body {
+    font-family: "SimSun", "宋体", serif;
+    font-size: 12pt;
+    line-height: 1.8;
+    color: #333;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 封面 */
+  section[role="cover"] {
+    page: cover;
+    padding: 6cm 2cm 2cm 2cm;
+    text-align: center;
+  }
+  .cover-title {
+    font-size: 26pt;
+    font-weight: bold;
+    color: #0d47a1;
+    margin-bottom: 1.5cm;
+    line-height: 1.4;
+  }
+  .cover-subtitle {
+    font-size: 14pt;
+    color: #555;
+    margin-bottom: 3cm;
+  }
+  .cover-meta {
+    font-size: 12pt;
+    color: #666;
+    line-height: 2.2;
+  }
+
+  /* 目录 */
+  .toc-title {
+    font-size: 16pt;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1cm;
+    color: #0d47a1;
+  }
+  .toc-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  .toc-list ol {
+    list-style: none;
+    padding-left: 1.5em;
+  }
+  .toc-list li {
+    margin-bottom: 0.4em;
+    line-height: 1.6;
+  }
+  .toc-list a {
+    text-decoration: none;
+    color: #333;
+    font-size: 11pt;
+  }
+
+  /* 章节 */
+  .chapter {
+    page-break-before: always;
+    data-page-restart: "1";
+  }
+  .chapter:first-of-type {
+    page-break-before: auto;
+  }
+  h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #0d47a1;
+    background-color: #e3f2fd;
+    padding: 0.4em 0.6em;
+    margin-top: 1.5em;
+    margin-bottom: 1em;
+    border-left: 5px solid #0d47a1;
+  }
+  h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #1565c0;
+    margin-top: 1.4em;
+    margin-bottom: 0.8em;
+    border-bottom: 1px solid #bbdefb;
+    padding-bottom: 0.3em;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #1976d2;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+  }
+
+  /* 正文段落 */
+  p {
+    text-indent: 2em;
+    margin-bottom: 0.8em;
+    text-align: justify;
+  }
+
+  /* 列表 */
+  ul, ol {
+    margin-left: 2em;
+    margin-bottom: 1em;
+  }
+  li {
+    margin-bottom: 0.3em;
+  }
+
+  /* 表格 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 10.5pt;
+  }
+  th {
+    background-color: #e3f2fd;
+    font-weight: bold;
+    border: 1px solid #90caf9;
+    padding: 0.5em;
+    text-align: left;
+  }
+  td {
+    border: 1px solid #bbdefb;
+    padding: 0.5em;
+    text-align: left;
+  }
+  tr:nth-child(even) {
+    background-color: #f5f9ff;
+  }
+
+  /* 代码块 */
+  pre {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 1em;
+    font-family: "Courier New", monospace;
+    font-size: 10pt;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  /* 引用 */
+  blockquote {
+    margin: 1em 0;
+    padding: 0.8em 1.2em;
+    background-color: #fff8e1;
+    border-left: 4px solid #ffc107;
+    color: #555;
+  }
+  blockquote p {
+    text-indent: 0;
+    margin-bottom: 0;
+  }
+
+  /* 强调 */
+  strong {
+    color: #0d47a1;
+  }
+
+  /* 流程图 */
+  .flow {
+    background-color: #f5f9ff;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    padding: 1em;
+    margin: 1em 0;
+    font-family: "Courier New", monospace;
+    font-size: 10pt;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  /* 风险等级标签 */
+  .risk-high {
+    color: #d32f2f;
+    font-weight: bold;
+  }
+  .risk-medium {
+    color: #f57c00;
+    font-weight: bold;
+  }
+  .risk-low {
+    color: #388e3c;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<!-- 封面 -->
+<section role="cover">
+  <div class="cover-title">公共安全垂直大模型 + 警务行业智能体<br>软件设计方案</div>
+  <div class="cover-subtitle">Software Design Document — Public Security Vertical LLM & Police Agent System</div>
+  <div class="cover-meta">
+    版本：v1.0<br>
+    日期：2026-10-15<br>
+    编制：锻码师架构组<br>
+    密级：内部机密
+  </div>
+</section>
+
+<!-- 目录 -->
+<section role="cover">
+<nav class="doc-toc" aria-label="文档目录">
+  <p class="toc-title">目录</p>
+  <ol class="toc-list">
+    <li><a href="#section-1">1. 文档概述</a>
+      <ol>
+        <li><a href="#section-1-1">1.1 项目定位</a></li>
+        <li><a href="#section-1-2">1.2 设计目标</a></li>
+        <li><a href="#section-1-3">1.3 适用范围</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-2">2. 总体架构设计</a>
+      <ol>
+        <li><a href="#section-2-1">2.1 架构原则</a></li>
+        <li><a href="#section-2-2">2.2 分层架构总览</a></li>
+        <li><a href="#section-2-3">2.3 层间职责与边界</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-3">3. 核心技术模块设计</a>
+      <ol>
+        <li><a href="#section-3-1">3.1 全域任务编排引擎</a></li>
+        <li><a href="#section-3-2">3.2 可信数据协同模块</a></li>
+        <li><a href="#section-3-3">3.3 虚实融合训推平台</a></li>
+        <li><a href="#section-3-4">3.4 六维标签引擎</a></li>
+        <li><a href="#section-3-5">3.5 时空计算引擎</a></li>
+        <li><a href="#section-3-6">3.6 技战法工场</a></li>
+        <li><a href="#section-3-7">3.7 指令转换网关</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-4">4. 数据架构设计</a>
+      <ol>
+        <li><a href="#section-4-1">4.1 数据源分类</a></li>
+        <li><a href="#section-4-2">4.2 存储选型</a></li>
+        <li><a href="#section-4-3">4.3 数据流转架构</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-5">5. 技术栈与版本</a>
+      <ol>
+        <li><a href="#section-5-1">5.1 基础技术栈</a></li>
+        <li><a href="#section-5-2">5.2 基础设施</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-6">6. 安全与合规设计</a>
+      <ol>
+        <li><a href="#section-6-1">6.1 合规要求</a></li>
+        <li><a href="#section-6-2">6.2 安全架构</a></li>
+        <li><a href="#section-6-3">6.3 威胁建模（STRIDE）</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-7">7. 部署架构设计</a>
+      <ol>
+        <li><a href="#section-7-1">7.1 部署拓扑</a></li>
+        <li><a href="#section-7-2">7.2 容器化部署</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-8">8. 阶段实施路线图</a>
+      <ol>
+        <li><a href="#section-8-1">8.1 总体阶段划分</a></li>
+        <li><a href="#section-8-2">8.2 阶段1：数据底座建设</a></li>
+        <li><a href="#section-8-3">8.3 阶段2：垂直警务大模型构建</a></li>
+        <li><a href="#section-8-4">8.4 阶段3：智能体引擎+技战法工场</a></li>
+        <li><a href="#section-8-5">8.5 阶段4：场景落地与迭代</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-9">9. 最小验证MVP</a>
+      <ol>
+        <li><a href="#section-9-1">9.1 MVP范围</a></li>
+        <li><a href="#section-9-2">9.2 MVP架构</a></li>
+        <li><a href="#section-9-3">9.3 MVP技术栈</a></li>
+        <li><a href="#section-9-4">9.4 MVP成功标准</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-10">10. 团队角色与职责</a></li>
+    <li><a href="#section-11">11. 风险识别与应对</a>
+      <ol>
+        <li><a href="#section-11-1">11.1 关键风险清单</a></li>
+        <li><a href="#section-11-2">11.2 风险监控指标</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-12">12. 附录</a>
+      <ol>
+        <li><a href="#section-12-1">12.1 核心组件清单</a></li>
+        <li><a href="#section-12-2">12.2 参考文档</a></li>
+        <li><a href="#section-12-3">12.3 术语表</a></li>
+      </ol>
+    </li>
+  </ol>
+</nav>
+</section>
+
+<!-- 正文 -->
+<section class="chapter" id="section-1">
+<h1>1. 文档概述</h1>
+
+<h2 id="section-1-1">1.1 项目定位</h2>
+<p>本项目面向公共安全领域，构建<strong>垂直大模型 + 警务行业智能体</strong>的完整技术体系。核心定位是：</p>
+<ul>
+<li><strong>非从零预训练基座</strong>：基于国产开源大模型基座（Qwen / DeepSeek 等），通过领域持续微调构建警务垂直模型</li>
+<li><strong>智能体闭环</strong>：从自然语言问答 → 业务指令生成 → 业务系统执行，形成完整闭环</li>
+<li><strong>强合规底座</strong>：所有数据、模型、调用链路满足等保、警务数据安全规范，涉密数据不出域</li>
+</ul>
+
+<h2 id="section-1-2">1.2 设计目标</h2>
+<table>
+  <tr><th>目标维度</th><th>量化指标</th></tr>
+  <tr><td>场景覆盖</td><td>情指行一体化、合成作战、重点人管控、沙盘推演、风险预警 5 大核心场景</td></tr>
+  <tr><td>模型能力</td><td>警务术语理解准确率 ≥ 95%；指令生成准确率 ≥ 92%；幻觉率 ≤ 3%</td></tr>
+  <tr><td>响应时效</td><td>问答场景 P95 ≤ 3s；指令下发 P95 ≤ 5s；时空计算 P95 ≤ 8s</td></tr>
+  <tr><td>合规要求</td><td>等保三级；全链路可审计；敏感数据脱敏率 100%</td></tr>
+  <tr><td>可扩展性</td><td>支持 50+ 警务 Skill 快速编排上线</td></tr>
+</table>
+
+<h2 id="section-1-3">1.3 适用范围</h2>
+<p>本文档面向以下角色：</p>
+<ul>
+<li><strong>AI 算法团队</strong>：模型微调、RAG 建设、Prompt 工程</li>
+<li><strong>大数据团队</strong>：数据接入、治理、图/时空数据库</li>
+<li><strong>后端架构团队</strong>：智能体编排、指令网关、微服务、权限审计</li>
+<li><strong>前端团队</strong>：技战法工场、沙盘可视化</li>
+<li><strong>行业专家</strong>：标注样本、定义技战法、校验输出</li>
+<li><strong>安全/运维</strong>：私有化集群、等保、审计、模型安全</li>
+</ul>
+</section>
+
+<section class="chapter" id="section-2">
+<h1>2. 总体架构设计</h1>
+
+<h2 id="section-2-1">2.1 架构原则</h2>
+<ol>
+<li><strong>合规优先</strong>：数据不出域、全链路审计、私有化部署</li>
+<li><strong>分层解耦</strong>：五层架构，层间通过标准接口通信</li>
+<li><strong>渐进演进</strong>：从 MVP 闭环验证，逐步扩展到全场景</li>
+<li><strong>可追溯</strong>：所有架构决策记录 ADR，支持回访与演化</li>
+<li><strong>安全为底线</strong>：从设计阶段嵌入安全控制，不事后修补</li>
+</ol>
+
+<h2 id="section-2-2">2.2 分层架构总览</h2>
+<p>系统采用自顶向下五层架构：</p>
+<div class="flow">┌─────────────────────────────────────────────────────────────────────┐
+│                        业务应用层                                    │
+│  情指行一体化 │ 合成作战 │ 重点人管控 │ 沙盘推演 │ 风险预警            │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                      智能体编排层                                    │
+│  任务编排引擎 │ Skill 调度 │ 技战法工场 │ 多 Agent 协同              │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                      能力引擎层                                    │
+│  垂直警务大模型 │ 六维标签引擎 │ 时空计算引擎 │ 可信推理引擎          │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                      底座支撑层                                    │
+│  可信数据协同 │ 虚实融合训推平台 │ 业务系统网关 / 指令转换器          │
+└─────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                      基础设施层                                    │
+│  GPU 集群 │ 对象存储 │ 向量库 │ 时序库 │ 图数据库 │ 权限审计        │
+└─────────────────────────────────────────────────────────────────────┘</div>
+
+<h2 id="section-2-3">2.3 层间职责与边界</h2>
+<table>
+  <tr><th>层级</th><th>核心职责</th><th>边界约束</th></tr>
+  <tr><td>业务应用层</td><td>面向最终用户的业务场景界面与交互</td><td>不直接访问基础设施，通过编排层调用能力</td></tr>
+  <tr><td>智能体编排层</td><td>任务拆解、Skill 调度、多 Agent 协同、状态管理</td><td>不存储业务数据，编排结果可审计</td></tr>
+  <tr><td>能力引擎层</td><td>模型推理、标签抽取、时空计算、可信校验</td><td>模型输出结构化指令，不直接操作业务库</td></tr>
+  <tr><td>底座支撑层</td><td>数据治理、训推一体、指令网关、权限控制</td><td>涉密数据不出域，所有操作留痕</td></tr>
+  <tr><td>基础设施层</td><td>算力、存储、数据库、网络</td><td>内网隔离，最小权限原则</td></tr>
+</table>
+</section>
+
+<section class="chapter" id="section-3">
+<h1>3. 核心技术模块设计</h1>
+
+<h2 id="section-3-1">3.1 全域任务编排引擎</h2>
+<p><strong>职责</strong>：接收高层业务意图，LLM 负责任务拆解，状态机管理子任务执行、失败重试、任务回溯，支持多 Agent 协同。</p>
+
+<h3>3.1.1 核心流程</h3>
+<div class="flow">用户意图
+    ↓
+[LLM 任务解析] → 生成子任务列表 + 依赖关系
+    ↓
+[状态机调度] → 按依赖顺序执行子任务
+    ↓
+[工具调用层] → 调用六维标签引擎 / 时空计算引擎 / 图查询
+    ↓
+[结果聚合] → 汇总子任务结果，生成最终响应
+    ↓
+[指令网关] → 转换为业务系统 API 调用（如需）</div>
+
+<h3>3.1.2 技术选型</h3>
+<ul>
+<li><strong>底层框架</strong>：LangGraph（状态机 + 图遍历）或自研轻量状态机</li>
+<li><strong>任务存储</strong>：PostgreSQL（任务状态、执行日志）</li>
+<li><strong>调度策略</strong>：拓扑排序 + 失败重试（指数退避）</li>
+<li><strong>可观测性</strong>：全链路日志 + 任务回溯快照</li>
+</ul>
+
+<h2 id="section-3-2">3.2 可信数据协同模块</h2>
+<p><strong>职责</strong>：数据分级分类、细粒度 RBAC 权限控制、数据脱敏、数据血缘追踪、隐私计算、全链路操作审计。</p>
+
+<h3>3.2.1 数据分级标准</h3>
+<table>
+  <tr><th>级别</th><th>定义</th><th>访问控制</th><th>存储要求</th></tr>
+  <tr><td>公开</td><td>可对外发布的信息</td><td>开放访问</td><td>标准存储</td></tr>
+  <tr><td>内部</td><td>部门内部使用</td><td>authenticated + 授权</td><td>加密存储</td></tr>
+  <tr><td>涉密</td><td>敏感业务数据</td><td>最小权限 + 审批流</td><td>专用加密存储，不出域</td></tr>
+</table>
+
+<h3>3.2.2 核心组件</h3>
+<ul>
+<li><strong>数据脱敏引擎</strong>：基于规则 + LLM 的敏感信息识别与替换</li>
+<li><strong>权限网关</strong>：统一鉴权入口，拦截未授权访问</li>
+<li><strong>审计日志服务</strong>：所有数据访问、模型调用、指令下发均记录审计日志</li>
+<li><strong>血缘追踪</strong>：记录数据从源到消费的完整链路</li>
+</ul>
+
+<h2 id="section-3-3">3.3 虚实融合训推平台</h2>
+<p><strong>训练链路</strong>：真实脱敏业务数据 + 仿真模拟案情数据混合训练。</p>
+
+<h3>3.3.1 训练策略</h3>
+<ol>
+<li><strong>RAG 先行</strong>：先挂载法条、技战法、案卷知识，快速实现警务问答</li>
+<li><strong>SFT 监督微调</strong>：教会模型理解警务术语、处置流程、输出结构化指令</li>
+<li><strong>DPO 偏好对齐</strong>：基于专家标注，对齐正确办案逻辑，规避幻觉</li>
+<li><strong>虚实混合训练</strong>：脱敏真实样本 + 仿真案情样本混合，沙盘推演场景重点用仿真数据</li>
+</ol>
+
+<h3>3.3.2 推理服务</h3>
+<ul>
+<li><strong>框架</strong>：vLLM / TGI（高吞吐推理）</li>
+<li><strong>部署</strong>：私有化 GPU 集群，K8s 编排</li>
+<li><strong>特性</strong>：动态负载、模型热更新、推理日志全审计</li>
+<li><strong>输出格式</strong>：优先输出标准化结构化 JSON 指令，供下游网关解析</li>
+</ul>
+
+<h2 id="section-3-4">3.4 六维标签引擎</h2>
+<p>基于警务经典六维：<strong>人、事、地、物、组织、时间</strong></p>
+
+<table>
+  <tr><th>维度</th><th>示例标签</th><th>存储方式</th></tr>
+  <tr><td>人</td><td>重点人员、涉毒人员、上访人员</td><td>图数据库（Neo4j/Nebula）</td></tr>
+  <tr><td>事</td><td>案件类型、警情等级、处置状态</td><td>图数据库 + 向量库</td></tr>
+  <tr><td>地</td><td>点位、区域、围栏、风险热区</td><td>时空数据库（PostGIS）</td></tr>
+  <tr><td>物</td><td>车辆、物品、设备、涉案财物</td><td>图数据库</td></tr>
+  <tr><td>组织</td><td>单位、团伙、利益链</td><td>图数据库</td></tr>
+  <tr><td>时间</td><td>案发时间、轨迹时间轴、时段规律</td><td>时序数据库</td></tr>
+</table>
+
+<p><strong>打标策略</strong>：规则引擎（确定性规则）+ 模型打标（LLM 辅助）+ 人工校验（低置信度审核）+ 标签演化（版本管理）。</p>
+
+<h2 id="section-3-5">3.5 时空计算引擎</h2>
+<p><strong>核心能力</strong>：轨迹分析、区域热力、时空碰撞、空间圈层研判、时空规律分析。</p>
+<p><strong>技术栈</strong>：PostGIS（空间索引）、Doris/ClickHouse（轨迹存储）、轨迹算法库（Douglas-Peucker、停留点检测）、可视化（Cesium / 高德 JSAPI / 天地图）。</p>
+
+<h2 id="section-3-6">3.6 技战法工场</h2>
+<p><strong>定位</strong>：业务专家无需编码的可视化 Skill 生产平台。</p>
+<p><strong>核心功能</strong>：可视化编排（拖拽式 Skill 流程设计）、Skill 类型管理（查询/统计/时空分析/预警/指令下发/案卷摘要/沙盘推演）、版本管理（战法版本、上线灰度、效果评估）、模板市场（沉淀高频 Skill 模板）。</p>
+<p><strong>技术实现</strong>：React + AntV X6 / React Flow（前端）、Skill 元数据管理与版本控制（后端）、Skill 沙箱执行（运行时）。</p>
+
+<h2 id="section-3-7">3.7 指令转换网关（闭环关键组件）</h2>
+<p><strong>职责</strong>：模型输出的结构化指令 → 校验鉴权 → 翻译成各业务系统 API 调用参数，权限校验、操作留痕、高危操作人工复核。</p>
+
+<h3>3.7.1 核心流程</h3>
+<div class="flow">模型输出 JSON 指令
+    ↓
+[ schema 校验 ] → 非法指令拦截
+    ↓
+[ 权限校验 ] → 操作者是否有权执行
+    ↓
+[ 指令翻译 ] → 转换为目标系统 API 参数
+    ↓
+[ 执行与回调 ] → 调用业务系统 → 记录结果 → 返回</div>
+
+<h3>3.7.2 安全控制</h3>
+<ul>
+<li><strong>高危操作拦截</strong>：涉及人员管控、案件状态变更等操作必须人工复核</li>
+<li><strong>操作留痕</strong>：所有指令执行记录不可篡改，存入审计日志</li>
+<li><strong>限流熔断</strong>：防止指令风暴击穿业务系统</li>
+<li><strong>幂等性</strong>：同一指令多次执行保证结果一致</li>
+</ul>
+</section>
+
+<section class="chapter" id="section-4">
+<h1>4. 数据架构设计</h1>
+
+<h2 id="section-4-1">4.1 数据源分类</h2>
+<table>
+  <tr><th>数据类型</th><th>来源</th><th>示例</th><th>处理方式</th></tr>
+  <tr><td>结构化数据</td><td>业务数据库</td><td>警情、人员、案件</td><td>CDC 采集、脱敏、入仓</td></tr>
+  <tr><td>非结构化数据</td><td>案卷、笔录、音视频</td><td>文本、音视频转写</td><td>解析、分段、向量化</td></tr>
+  <tr><td>时空数据</td><td>GPS、点位、轨迹</td><td>车辆轨迹、人员活动</td><td>时空索引、轨迹压缩</td></tr>
+  <tr><td>知识库数据</td><td>法条、技战法、规范</td><td>法律法规、处置流程</td><td>文档解析、分段、向量化</td></tr>
+</table>
+
+<h2 id="section-4-2">4.2 存储选型</h2>
+<table>
+  <tr><th>存储类型</th><th>技术选型</th><th>存储内容</th><th>选型理由</th></tr>
+  <tr><td>向量数据库</td><td>Milvus / PGVector</td><td>法条、案卷文本、Skill 描述</td><td>高维向量检索，支持 ANN</td></tr>
+  <tr><td>图数据库</td><td>Nebula / Neo4j</td><td>人、事、关系网络</td><td>关联分析、路径查询</td></tr>
+  <tr><td>时空数据库</td><td>Doris / ClickHouse + PostGIS</td><td>轨迹、区域、热力</td><td>时序优化 + 空间索引</td></tr>
+  <tr><td>业务主库</td><td>MySQL / 达梦</td><td>警情、人员、案件主数据</td><td>国产兼容、事务支持</td></tr>
+  <tr><td>对象存储</td><td>MinIO / 私有化 S3</td><td>音视频、文档、模型文件</td><td>海量非结构化存储</td></tr>
+  <tr><td>缓存</td><td>Redis</td><td>热点标签、会话状态</td><td>低延迟访问</td></tr>
+</table>
+
+<h2 id="section-4-3">4.3 数据流转架构</h2>
+<div class="flow">数据源层
+    ↓ CDC / 批量采集
+数据接入层（脱敏、分级）
+    ↓
+数据湖 / 数据仓（原始层）
+    ↓
+数据治理（清洗、打标、血缘）
+    ↓
+┌──────────┬──────────┬──────────┐
+│ 向量库    │ 图数据库  │ 时空库    │
+│(RAG 知识) │(关联分析) │(轨迹计算) │
+└──────────┴──────────┴──────────┘
+    ↓           ↓          ↓
+  能力引擎层（模型推理、标签、计算）</div>
+</section>
+
+<section class="chapter" id="section-5">
+<h1>5. 技术栈与版本</h1>
+
+<h2 id="section-5-1">5.1 基础技术栈</h2>
+<table>
+  <tr><th>层级</th><th>技术组件</th><th>版本/选型</th><th>说明</th></tr>
+  <tr><td>大模型基座</td><td>Qwen2.5 / DeepSeek-V2</td><td>7B/14B 私有化</td><td>领域微调基座，本地部署</td></tr>
+  <tr><td>微调框架</td><td>LLaMA-Factory / Unsloth</td><td>最新稳定版</td><td>SFT、DPO 训练</td></tr>
+  <tr><td>RAG 框架</td><td>LangChain / LlamaIndex</td><td>最新稳定版</td><td>检索增强生成</td></tr>
+  <tr><td>后端框架</td><td>Spring Boot 3.x / Go Zero</td><td>团队熟悉度优先</td><td>微服务 / 网关</td></tr>
+  <tr><td>向量数据库</td><td>Milvus 2.x / PGVector</td><td>部署规模决定</td><td>向量检索</td></tr>
+  <tr><td>图数据库</td><td>NebulaGraph 3.x / Neo4j</td><td>国产优先</td><td>关联分析</td></tr>
+  <tr><td>时空数据库</td><td>Doris 2.x + PostGIS</td><td>选型待核实</td><td>轨迹与空间计算</td></tr>
+  <tr><td>消息队列</td><td>RabbitMQ / Kafka</td><td>根据场景选择</td><td>异步解耦</td></tr>
+  <tr><td>容器编排</td><td>Kubernetes</td><td>1.28+</td><td>模型服务编排</td></tr>
+  <tr><td>前端框架</td><td>React 18 + TypeScript</td><td>团队熟悉度优先</td><td>技战法工场</td></tr>
+</table>
+
+<h2 id="section-5-2">5.2 基础设施</h2>
+<table>
+  <tr><th>组件</th><th>选型</th><th>说明</th></tr>
+  <tr><td>GPU</td><td>NVIDIA A100 / H100 / 4090</td><td>根据算力需求选型</td></tr>
+  <tr><td>对象存储</td><td>MinIO / 私有化 S3</td><td>模型文件、音视频存储</td></tr>
+  <tr><td>日志系统</td><td>ELK / Loki</td><td>全链路日志采集</td></tr>
+  <tr><td>监控</td><td>Prometheus + Grafana</td><td>指标采集与展示</td></tr>
+  <tr><td>链路追踪</td><td>Jaeger / OpenTelemetry</td><td>分布式链路追踪</td></tr>
+</table>
+
+<blockquote>
+<p><strong>注</strong>：以上版本号为建议参考值，具体部署前需以官方文档核实兼容性。</p>
+</blockquote>
+</section>
+
+<section class="chapter" id="section-6">
+<h1>6. 安全与合规设计</h1>
+
+<h2 id="section-6-1">6.1 合规要求</h2>
+<table>
+  <tr><th>合规项</th><th>要求</th><th>实现方式</th></tr>
+  <tr><td>等保三级</td><td>安全保护等级三级</td><td>等保测评 + 差距整改</td></tr>
+  <tr><td>数据不出域</td><td>涉密数据禁止出内网</td><td>私有化部署 + 网络隔离</td></tr>
+  <tr><td>全链路审计</td><td>所有操作可追溯</td><td>审计日志 + 区块链存证（可选）</td></tr>
+  <tr><td>密钥管理</td><td>密钥不硬编码</td><td>KMS / Vault 管理</td></tr>
+  <tr><td>访问控制</td><td>最小权限原则</td><td>RBAC + ABAC 结合</td></tr>
+</table>
+
+<h2 id="section-6-2">6.2 安全架构</h2>
+
+<h3>6.2.1 网络安全</h3>
+<ul>
+<li><strong>网络隔离</strong>：业务域、数据域、模型域三层隔离</li>
+<li><strong>边界防护</strong>：WAF、入侵检测、流量清洗</li>
+<li><strong>传输加密</strong>：全链路 TLS 1.3</li>
+</ul>
+
+<h3>6.2.2 数据安全</h3>
+<ul>
+<li><strong>加密存储</strong>：敏感数据 AES-256 加密</li>
+<li><strong>脱敏处理</strong>：输出前自动脱敏（姓名、身份证、手机号等）</li>
+<li><strong>数据销毁</strong>：退役存储介质安全擦除</li>
+</ul>
+
+<h3>6.2.3 模型安全</h3>
+<ul>
+<li><strong>Prompt 注入防护</strong>：输入过滤 + 输出校验</li>
+<li><strong>越狱防护</strong>：jailbreak 检测 + 拦截</li>
+<li><strong>幻觉缓解</strong>：RAG 强约束 + 事实引用 + 人工复核</li>
+</ul>
+
+<h2 id="section-6-3">6.3 威胁建模（STRIDE）</h2>
+<table>
+  <tr><th>威胁类型</th><th>风险场景</th><th>缓解措施</th></tr>
+  <tr><td>Spoofing（伪装）</td><td>非法用户冒充警察</td><td>强身份认证 + 警务证书校验</td></tr>
+  <tr><td>Tampering（篡改）</td><td>篡改模型输出或指令</td><td>输出签名 + 区块链存证</td></tr>
+  <tr><td>Repudiation（抵赖）</td><td>操作后否认</td><td>不可篡改审计日志</td></tr>
+  <tr><td>Information Disclosure</td><td>敏感数据泄露</td><td>数据脱敏 + 权限控制</td></tr>
+  <tr><td>Denial of Service</td><td>模型服务被击穿</td><td>限流熔断 + 降级策略</td></tr>
+  <tr><td>Elevation of Privilege</td><td>低权限用户越权</td><td>RBAC + 操作审批</td></tr>
+</table>
+</section>
+
+<section class="chapter" id="section-7">
+<h1>7. 部署架构设计</h1>
+
+<h2 id="section-7-1">7.1 部署拓扑</h2>
+<div class="flow">                        ┌──────────────────┐
+                        │   互联网 / 公安网  │
+                        │   (业务应用层)     │
+                        └────────┬─────────┘
+                                 ↓ HTTPS
+                        ┌──────────────────┐
+                        │   API 网关        │
+                        │  (鉴权/限流/路由)  │
+                        └────────┬─────────┘
+                                 ↓
+            ┌────────────────────┼────────────────────┐
+            ↓                    ↓                    ↓
+    ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
+    │ 智能体编排服务  │   │ 指令网关服务   │   │ 技战法工场    │
+    └───────────────┘   └───────────────┘   └───────────────┘
+            ↓                    ↓                    ↓
+            └────────────────────┼────────────────────┘
+                                 ↓
+                        ┌──────────────────┐
+                        │  能力引擎层       │
+                        │ 模型服务 / 标签   │
+                        │ 时空计算 / 推理   │
+                        └────────┬─────────┘
+                                 ↓
+                        ┌──────────────────┐
+                        │  底座支撑层       │
+                        │ 数据协同 / 训推   │
+                        │ 权限 / 审计       │
+                        └────────┬─────────┘
+                                 ↓
+                        ┌──────────────────┐
+                        │  基础设施层       │
+                        │ GPU / 存储 / 数据库│
+                        └──────────────────┘</div>
+
+<h2 id="section-7-2">7.2 容器化部署</h2>
+<table>
+  <tr><th>服务</th><th>副本数</th><th>资源规格</th><th>部署方式</th></tr>
+  <tr><td>API 网关</td><td>3</td><td>4C8G</td><td>K8s Deployment</td></tr>
+  <tr><td>智能体编排</td><td>2</td><td>8C16G</td><td>K8s Deployment</td></tr>
+  <tr><td>指令网关</td><td>2</td><td>4C8G</td><td>K8s Deployment</td></tr>
+  <tr><td>模型推理</td><td>按需</td><td>16C32G + GPU</td><td>K8s + GPU Operator</td></tr>
+  <tr><td>向量库</td><td>3</td><td>8C16G</td><td>K8s StatefulSet</td></tr>
+  <tr><td>图数据库</td><td>3</td><td>8C16G</td><td>K8s StatefulSet</td></tr>
+  <tr><td>时空数据库</td><td>3</td><td>8C16G</td><td>K8s StatefulSet</td></tr>
+</table>
+</section>
+
+<section class="chapter" id="section-8">
+<h1>8. 阶段实施路线图</h1>
+
+<h2 id="section-8-1">8.1 总体阶段划分</h2>
+<table>
+  <tr><th>阶段</th><th>时间</th><th>目标</th><th>交付物</th></tr>
+  <tr><td>阶段 1</td><td>0~3 个月</td><td>需求梳理 &amp; 数据底座建设</td><td>48 类数据源接入、六维标签引擎、知识库向量库</td></tr>
+  <tr><td>阶段 2</td><td>2~5 个月</td><td>基座选型 + 垂直警务大模型构建</td><td>警务垂直微调模型、RAG 知识库、训推平台</td></tr>
+  <tr><td>阶段 3</td><td>4~7 个月</td><td>智能体引擎 + 技战法工场构建</td><td>技战法工场、编排引擎、50+ 警务 Skill、指令网关</td></tr>
+  <tr><td>阶段 4</td><td>6~10 个月</td><td>场景落地、可信协同、评测迭代</td><td>五大业务场景上线，完整运维监控体系</td></tr>
+</table>
+
+<blockquote>
+<p><strong>注</strong>：阶段存在时间重叠，采用增量交付方式。</p>
+</blockquote>
+
+<h2 id="section-8-2">8.2 阶段1：数据底座建设（0~3 个月）</h2>
+<p><strong>目标</strong>：完成 48 类数据源接入、数据治理、标签体系落地</p>
+<p><strong>关键任务</strong>：</p>
+<ol>
+<li><strong>数据源接入</strong>：结构化库（警情、人员、案件，CDC 采集）、非结构化（笔录、案卷、音视频转写）、时空数据（点位、轨迹、区域）</li>
+<li><strong>数据治理</strong>：数据清洗（去重、格式统一、敏感信息屏蔽）、六维标签体系构建（人、事、地、物、组织、时间）、数据集划分（RAG 库、SFT 数据集、仿真数据集）</li>
+<li><strong>存储建设</strong>：向量库（Milvus/PGVector）、图数据库（Nebula/Neo4j）、时空数据库（Doris + PostGIS）</li>
+</ol>
+<p><strong>交付物</strong>：48 类数据源接入完成；5 亿业务数据治理流水线；六维标签引擎；知识库向量库。</p>
+
+<h2 id="section-8-3">8.3 阶段2：垂直警务大模型构建（2~5 个月）</h2>
+<p><strong>目标</strong>：基于开源基座构建警务垂直微调模型</p>
+<p><strong>关键任务</strong>：</p>
+<ol>
+<li><strong>基座选型与部署</strong>：国产大模型基座选型（Qwen2.5 / DeepSeek），私有化部署，本地推理</li>
+<li><strong>RAG 先行</strong>：法条、技战法、案卷知识挂载，检索策略优化</li>
+<li><strong>SFT 监督微调</strong>：警务样本收集与清洗，模型微调训练</li>
+<li><strong>DPO 偏好对齐</strong>：专家标注，对齐办案逻辑，幻觉抑制验证</li>
+<li><strong>训推平台建设</strong>：训练框架部署，推理服务化（vLLM / TGI）</li>
+</ol>
+<p><strong>交付物</strong>：警务垂直微调模型、RAG 知识库、训推平台、模型安全审计模块。</p>
+
+<h2 id="section-8-4">8.4 阶段3：智能体引擎+技战法工场（4~7 个月）</h2>
+<p><strong>目标</strong>：实现业务闭环（自然语言 → 模型拆解 → 调用工具 → 下发业务系统）</p>
+<p><strong>关键任务</strong>：</p>
+<ol>
+<li><strong>技战法工场建设</strong>：前端可视化编排界面、Skill 元数据管理与版本控制、Skill 运行时沙箱</li>
+<li><strong>全域任务编排引擎</strong>：LLM 任务拆解、状态机管理、多 Agent 协同</li>
+<li><strong>时空计算引擎</strong>：轨迹分析算法、区域热力计算、空间圈层研判</li>
+<li><strong>指令转换网关</strong>：结构化指令解析、业务系统适配器、权限校验与审计</li>
+</ol>
+<p><strong>交付物</strong>：技战法工场、智能体编排引擎、50+ 警务 Skill、业务系统指令网关。</p>
+
+<h2 id="section-8-5">8.5 阶段4：场景落地与迭代（6~10 个月）</h2>
+<p><strong>目标</strong>：5 大核心业务场景上线，持续迭代</p>
+<p><strong>关键任务</strong>：</p>
+<ol>
+<li><strong>可信数据协同模块</strong>：数据跨域访问控制、隐私计算组件、全链路操作审计</li>
+<li><strong>场景验证与评测</strong>：业务专家评测（战法准确率、幻觉率）、安全评测（敏感信息泄露、违规指令拦截）、实战小范围试点 → 灰度扩大</li>
+<li><strong>持续迭代</strong>：业务实战样本回流、模型持续迭代、战法 Skill 更新</li>
+</ol>
+<p><strong>交付物</strong>：五大业务场景上线、完整运维监控体系、模型持续迭代流水线。</p>
+</section>
+
+<section class="chapter" id="section-9">
+<h1>9. 最小验证 MVP（快速跑通闭环）</h1>
+
+<h2 id="section-9-1">9.1 MVP 范围</h2>
+<p><strong>建议首个试点场景</strong>：重点人风险预警</p>
+
+<h2 id="section-9-2">9.2 MVP 架构</h2>
+<div class="flow">用户输入："评估重点人张某的风险等级"
+    ↓
+[智能体编排] → 拆解为：
+  1. 查询六维标签（人）
+  2. 查询时空轨迹（地、时间）
+  3. 查询关联人员（关系网络）
+  4. 风险评分计算
+  5. 生成预警报告
+    ↓
+[能力引擎] → 调用标签引擎 + 时空计算 + 图查询
+    ↓
+[指令网关] → 将预警结果写入业务系统
+    ↓
+返回结果：风险等级（高/中/低）+ 关键因素 + 建议处置</div>
+
+<h2 id="section-9-3">9.3 MVP 技术栈（简化版）</h2>
+<table>
+  <tr><th>组件</th><th>选型</th><th>说明</th></tr>
+  <tr><td>模型</td><td>Qwen2.5-7B + RAG</td><td>快速验证，降低算力需求</td></tr>
+  <tr><td>编排</td><td>LangGraph 简化版</td><td>任务拆解与调度</td></tr>
+  <tr><td>标签</td><td>规则引擎 + Neo4j</td><td>六维标签初步实现</td></tr>
+  <tr><td>时空</td><td>PostGIS</td><td>基础轨迹查询</td></tr>
+  <tr><td>网关</td><td>Spring Boot</td><td>指令转换与业务适配</td></tr>
+</table>
+
+<h2 id="section-9-4">9.4 MVP 成功标准</h2>
+<ul>
+<li>从自然语言到风险预警输出，端到端延迟 ≤ 10s</li>
+<li>标签准确率 ≥ 90%</li>
+<li>幻觉率 ≤ 5%（人工抽检）</li>
+<li>指令下发成功率 ≥ 99%</li>
+</ul>
+</section>
+
+<section class="chapter" id="section-10">
+<h1>10. 团队角色与职责</h1>
+<table>
+  <tr><th>角色</th><th>人数</th><th>核心职责</th><th>技能要求</th></tr>
+  <tr><td>AI 算法工程师</td><td>2~3</td><td>模型微调、RAG、Prompt 工程、评测</td><td>Python、PyTorch、LangChain</td></tr>
+  <tr><td>大数据工程师</td><td>2~3</td><td>数据接入、治理、图/时空数据库</td><td>Spark、Flink、Nebula、Doris</td></tr>
+  <tr><td>后端架构师</td><td>2~3</td><td>智能体编排、指令网关、微服务</td><td>Java/Go、Spring Boot、K8s</td></tr>
+  <tr><td>前端工程师</td><td>1~2</td><td>技战法工场、沙盘可视化</td><td>React、TypeScript、可视化库</td></tr>
+  <tr><td>行业专家（警务）</td><td>1~2</td><td>样本标注、技战法定义、输出校验</td><td>警务业务经验</td></tr>
+  <tr><td>安全/运维工程师</td><td>1~2</td><td>私有化集群、等保、审计、模型安全</td><td>网络安全、K8s、等保测评</td></tr>
+</table>
+</section>
+
+<section class="chapter" id="section-11">
+<h1>11. 风险识别与应对</h1>
+
+<h2 id="section-11-1">11.1 关键风险清单</h2>
+<table>
+  <tr><th>风险类别</th><th>风险描述</th><th>影响等级</th><th>应对措施</th></tr>
+  <tr><td>幻觉风险</td><td>警务场景模型幻觉造成严重后果</td><td><span class="risk-high">🔴 高</span></td><td>RAG 强约束 + 输出事实引用 + 高危结论人工复核 + DPO 对齐</td></tr>
+  <tr><td>数据安全合规</td><td>涉密数据泄露或出域</td><td><span class="risk-high">🔴 高</span></td><td>私有化部署 + 数据脱敏 + 分级 + 全链路审计</td></tr>
+  <tr><td>业务接口异构</td><td>各警务系统接口标准不一致</td><td><span class="risk-medium">🟠 中</span></td><td>统一指令网关 + 适配器模式 + 接口标准化</td></tr>
+  <tr><td>Skill 维护成本</td><td>50+ Skill 维护困难</td><td><span class="risk-medium">🟠 中</span></td><td>技战法工场降低门槛 + 模板沉淀 + 业务专家自助维护</td></tr>
+  <tr><td>算力成本</td><td>大模型训练/推理成本高</td><td><span class="risk-low">🟡 低</span></td><td>7B/14B 小模型 + 增量微调 + 动态扩缩容</td></tr>
+  <tr><td>团队能力 gap</td><td>警务 AI 复合人才稀缺</td><td><span class="risk-medium">🟠 中</span></td><td>行业专家深度参与 + 分阶段培训 + 外部咨询</td></tr>
+  <tr><td>模型漂移</td><td>业务变化导致模型效果下降</td><td><span class="risk-low">🟡 低</span></td><td>持续监控 + 定期 retrain + 样本回流机制</td></tr>
+</table>
+
+<h2 id="section-11-2">11.2 风险监控指标</h2>
+<table>
+  <tr><th>指标</th><th>监控方式</th><th>告警阈值</th></tr>
+  <tr><td>模型幻觉率</td><td>定期人工抽检</td><td>&gt; 5% 告警</td></tr>
+  <tr><td>指令成功率</td><td>网关日志统计</td><td>&lt; 99% 告警</td></tr>
+  <tr><td>数据脱敏率</td><td>脱敏引擎日志</td><td>&lt; 100% 告警</td></tr>
+  <tr><td>响应延迟 P95</td><td>链路追踪</td><td>问答 &gt; 3s / 指令 &gt; 5s 告警</td></tr>
+  <tr><td>算力利用率</td><td>GPU 监控</td><td>&lt; 60% 持续 30min 告警</td></tr>
+</table>
+</section>
+
+<section class="chapter" id="section-12">
+<h1>12. 附录</h1>
+
+<h2 id="section-12-1">12.1 核心组件清单</h2>
+<table>
+  <tr><th>模块</th><th>技术选型参考</th><th>作用</th></tr>
+  <tr><td>警务垂直大模型</td><td>Qwen/DeepSeek 基座 + SFT+DPO 私有化微调</td><td>理解警务专业文本、案情推理、生成结构化指令</td></tr>
+  <tr><td>RAG 知识库</td><td>PGVector/Milvus，文档解析、分段、重排</td><td>法条、技战法、案卷检索，抑制幻觉</td></tr>
+  <tr><td>六维标签引擎</td><td>规则 + 模型联合打标，图数据库存储</td><td>人事物地组织时间标签抽取、实体关联</td></tr>
+  <tr><td>时空计算引擎</td><td>PostGIS、Doris、轨迹算法</td><td>空间、时序、区域风险计算，沙盘推演</td></tr>
+  <tr><td>智能体编排引擎</td><td>自研状态机 + 工具调度（参考 LangGraph）</td><td>任务拆解、多 Agent 调度、Skill 编排</td></tr>
+  <tr><td>技战法工场</td><td>前端低代码拖拽，Skill 版本管理</td><td>业务专家生产、编辑、发布警务技能</td></tr>
+  <tr><td>指令网关/业务适配器</td><td>Go/Java 微服务，API 适配层</td><td>模型结构化指令转为业务系统可调用接口，鉴权审计</td></tr>
+  <tr><td>可信数据协同</td><td>数据脱敏、隐私计算组件、细粒度 RBAC 权限</td><td>涉密数据安全共享，全链路审计</td></tr>
+  <tr><td>虚实融合训推平台</td><td>训练框架 Unsloth/LLaMA Factory + 私有化推理服务</td><td>SFT、DPO，真实 + 仿真数据混合训练</td></tr>
+</table>
+
+<h2 id="section-12-2">12.2 参考文档</h2>
+<ul>
+<li>《公共安全垂直大模型 + 警务行业智能体｜完整技术落地路径》</li>
+<li>《以高效高质标准体系引领具身智能机器人公共安全应用的建议》</li>
+<li>《安防具身智能巡逻机器人难点痛点梳理与解决方案》</li>
+</ul>
+
+<h2 id="section-12-3">12.3 术语表</h2>
+<table>
+  <tr><th>术语</th><th>定义</th></tr>
+  <tr><td>RAG</td><td>Retrieval-Augmented Generation，检索增强生成</td></tr>
+  <tr><td>SFT</td><td>Supervised Fine-Tuning，监督微调</td></tr>
+  <tr><td>DPO</td><td>Direct Preference Optimization，直接偏好优化</td></tr>
+  <tr><td>Skill</td><td>警务业务技能，封装为可调用的工具函数</td></tr>
+  <tr><td>六维标签</td><td>人、事、地、物、组织、时间六类实体标签</td></tr>
+  <tr><td>技战法</td><td>警务实战中的技术战法，可沉淀为可复用 Skill</td></tr>
+  <tr><td>情指行</td><td>情报、指挥、行动一体化</td></tr>
+  <tr><td>合成作战</td><td>多警种、多部门协同作战模式</td></tr>
+  <tr><td>等保</td><td>信息安全等级保护</td></tr>
+</table>
+</section>
+
+</body>
+</html>
