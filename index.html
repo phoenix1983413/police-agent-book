@@ -130,12 +130,19 @@
             overflow-y: auto;
             position: relative;
             z-index: 1;
+            background: radial-gradient(ellipse at center, rgba(10,10,15,0.15) 0%, rgba(10,10,15,0.55) 70%, rgba(10,10,15,0.75) 100%);
         }
 
         .content-wrapper {
             max-width: 900px;
             margin: 0 auto;
             padding: 40px 60px 80px;
+            background: rgba(10, 10, 15, 0.35);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            border-radius: 12px;
+            margin-top: 24px;
+            margin-bottom: 24px;
         }
 
         /* Cover Section */
@@ -575,6 +582,7 @@
 <body>
     <!-- Three.js Canvas Container -->
     <div id="canvas-container"></div>
+    <div style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;background:radial-gradient(ellipse at center, transparent 40%, rgba(10,10,15,0.35) 100%);"></div>
 
     <!-- Mobile Menu Toggle -->
     <div class="menu-toggle" id="menuToggle">
@@ -659,14 +667,14 @@
         <div class="control-group">
             <div class="control-label">
                 <span>旋转速度</span>
-                <span class="control-value" id="speedValue">1.0x</span>
+                <span class="control-value" id="speedValue">0.5x</span>
             </div>
-            <input type="range" class="slider" id="rotationSpeed" min="0.1" max="3" step="0.1" value="1">
+            <input type="range" class="slider" id="rotationSpeed" min="0" max="2" step="0.1" value="0.5">
         </div>
 
         <div class="control-group">
             <div class="control-label">
-                <span>碎片显隐</span>
+                <span>卫星显隐</span>
                 <div class="toggle-switch active" id="fragmentsToggle"></div>
             </div>
         </div>
@@ -674,9 +682,9 @@
         <div class="control-group">
             <div class="control-label">
                 <span>环境亮度</span>
-                <span class="control-value" id="brightnessValue">75%</span>
+                <span class="control-value" id="brightnessValue">60%</span>
             </div>
-            <input type="range" class="slider" id="brightness" min="20" max="100" step="5" value="75">
+            <input type="range" class="slider" id="brightness" min="20" max="100" step="5" value="60">
         </div>
 
         <div class="control-group">
@@ -1216,172 +1224,315 @@
         controls.maxDistance = 15;
         controls.autoRotate = false;
 
-        camera.position.set(0, 2, 6);
+        camera.position.set(0, 1.5, 7.5);
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+        // Lighting - softer, more natural
+        const ambientLight = new THREE.AmbientLight(0x303040, 0.35);
         scene.add(ambientLight);
 
-        const mainLight = new THREE.DirectionalLight(0xffffff, 2);
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
         mainLight.position.set(5, 3, 5);
         scene.add(mainLight);
 
-        const fillLight = new THREE.DirectionalLight(0x4488ff, 0.5);
-        fillLight.position.set(-5, -3, -5);
+        const fillLight = new THREE.DirectionalLight(0x3366aa, 0.35);
+        fillLight.position.set(-5, -2, -5);
         scene.add(fillLight);
 
-        const rimLight = new THREE.DirectionalLight(0x00d4ff, 1);
-        rimLight.position.set(0, 5, -5);
+        const rimLight = new THREE.DirectionalLight(0x2266aa, 0.5);
+        rimLight.position.set(0, 4, -5);
         scene.add(rimLight);
 
-        // Create procedural textures
-        function createNoiseTexture(size = 512) {
+        // Simple value noise for procedural textures
+        function createNoiseTexture(size = 512, scale = 1) {
             const canvas = document.createElement('canvas');
             canvas.width = size;
             canvas.height = size;
             const ctx = canvas.getContext('2d');
-            
+
             const imageData = ctx.createImageData(size, size);
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                const v = Math.random() * 255;
-                imageData.data[i] = v;
-                imageData.data[i + 1] = v;
-                imageData.data[i + 2] = v;
-                imageData.data[i + 3] = 255;
+            const data = imageData.data;
+            const grid = new Float32Array((size + 1) * (size + 1));
+            for (let i = 0; i < grid.length; i++) grid[i] = Math.random();
+
+            function lerp(a, b, t) { return a + (b - a) * t; }
+            function smooth(t) { return t * t * (3 - 2 * t); }
+            function sample(x, y) {
+                const xi = Math.floor(x) % size;
+                const yi = Math.floor(y) % size;
+                const xf = smooth(x - Math.floor(x));
+                const yf = smooth(y - Math.floor(y));
+                const x0 = xi, x1 = (xi + 1) % size;
+                const y0 = yi, y1 = (yi + 1) % size;
+                return lerp(
+                  lerp(grid[y0 * size + x0], grid[y0 * size + x1], xf),
+                  lerp(grid[y1 * size + x0], grid[y1 * size + x1], xf),
+                  yf
+                );
             }
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const i = (y * size + x) * 4;
+                    const v = Math.floor(sample(x / size * scale, y / size * scale) * 255);
+                    data[i] = v;
+                    data[i + 1] = v;
+                    data[i + 2] = v;
+                    data[i + 3] = 255;
+                }
+            }
+
             ctx.putImageData(imageData, 0, 0);
-            
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
             return texture;
         }
 
-        function createMetalTexture(baseColor = 0x8899aa) {
+        // Procedural Earth-like texture
+        function createEarthTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
-            
-            // Base gradient
-            const gradient = ctx.createLinearGradient(0, 0, 1024, 512);
-            gradient.addColorStop(0, '#667788');
-            gradient.addColorStop(0.5, '#8899aa');
-            gradient.addColorStop(1, '#556677');
-            ctx.fillStyle = gradient;
+
+            // Ocean base
+            const oceanGradient = ctx.createLinearGradient(0, 0, 0, 512);
+            oceanGradient.addColorStop(0, '#1a3a5c');
+            oceanGradient.addColorStop(0.5, '#1e4d7b');
+            oceanGradient.addColorStop(1, '#163048');
+            ctx.fillStyle = oceanGradient;
             ctx.fillRect(0, 0, 1024, 512);
-            
-            // Add scratches and wear
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 500; i++) {
+
+            // Generate continent-like shapes using layered noise
+            const continentCanvas = document.createElement('canvas');
+            continentCanvas.width = 1024;
+            continentCanvas.height = 512;
+            const cCtx = continentCanvas.getContext('2d');
+            const cImageData = cCtx.createImageData(1024, 512);
+            const cData = cImageData.data;
+
+            const gridSize = 64;
+            const grid = new Float32Array((gridSize + 2) * (gridSize + 2));
+            for (let i = 0; i < grid.length; i++) grid[i] = Math.random();
+
+            function lerp(a, b, t) { return a + (b - a) * t; }
+            function smooth(t) { return t * t * (3 - 2 * t); }
+            function sample(x, y) {
+                const xi = Math.floor(x) % gridSize;
+                const yi = Math.floor(y) % gridSize;
+                const xf = smooth(x - Math.floor(x));
+                const yf = smooth(y - Math.floor(y));
+                const x0 = xi, x1 = (xi + 1) % gridSize;
+                const y0 = yi, y1 = (yi + 1) % gridSize;
+                return lerp(
+                  lerp(grid[y0 * gridSize + x0], grid[y0 * gridSize + x1], xf),
+                  lerp(grid[y1 * gridSize + x0], grid[y1 * gridSize + x1], xf),
+                  yf
+                );
+            }
+
+            function fbm(x, y, octaves = 5) {
+                let value = 0;
+                let amplitude = 0.5;
+                let frequency = 1;
+                for (let i = 0; i < octaves; i++) {
+                    value += amplitude * sample(x * frequency, y * frequency);
+                    amplitude *= 0.5;
+                    frequency *= 2;
+                }
+                return value;
+            }
+
+            for (let y = 0; y < 512; y++) {
+                for (let x = 0; x < 1024; x++) {
+                    const i = (y * 1024 + x) * 4;
+                    const nx = x / 1024;
+                    const ny = y / 512;
+
+                    // Latitude-based land probability (more land in mid-latitudes)
+                    const latFactor = 1 - Math.abs(ny - 0.5) * 1.2;
+                    const noise = fbm(nx * 12 + 5.3, ny * 6 + 2.7, 5);
+                    const landThreshold = 0.48 + latFactor * 0.08;
+
+                    if (noise > landThreshold) {
+                        // Land colors based on latitude and noise
+                        const elevation = (noise - landThreshold) / (1 - landThreshold);
+                        if (ny < 0.15 || ny > 0.85) {
+                            // Ice caps
+                            const ice = 200 + elevation * 55;
+                            cData[i] = ice;
+                            cData[i + 1] = ice;
+                            cData[i + 2] = ice;
+                        } else if (elevation > 0.6) {
+                            // Mountains
+                            cData[i] = 120 + elevation * 60;
+                            cData[i + 1] = 100 + elevation * 50;
+                            cData[i + 2] = 80 + elevation * 40;
+                        } else {
+                            // Green/brown land
+                            const green = 100 + elevation * 80 + latFactor * 40;
+                            cData[i] = 60 + elevation * 40;
+                            cData[i + 1] = Math.min(255, green);
+                            cData[i + 2] = 40 + elevation * 30;
+                        }
+                    } else {
+                        // Ocean depth
+                        const depth = noise / landThreshold;
+                        cData[i] = 20 + depth * 20;
+                        cData[i + 1] = 50 + depth * 40;
+                        cData[i + 2] = 90 + depth * 50;
+                    }
+                    cData[i + 3] = 255;
+                }
+            }
+
+            cCtx.putImageData(cImageData, 0, 0);
+            ctx.drawImage(continentCanvas, 0, 0);
+
+            // Add subtle cloud-like noise
+            ctx.globalAlpha = 0.15;
+            for (let i = 0; i < 30; i++) {
                 const x = Math.random() * 1024;
                 const y = Math.random() * 512;
-                const length = Math.random() * 50 + 10;
-                const angle = Math.random() * Math.PI * 2;
-                
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
-                ctx.stroke();
+                const radius = Math.random() * 80 + 20;
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
             }
-            
-            // Add some brighter spots (polished areas)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            for (let i = 0; i < 100; i++) {
-                const x = Math.random() * 1024;
-                const y = Math.random() * 512;
-                const radius = Math.random() * 20 + 5;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
+            ctx.globalAlpha = 1;
+
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
+            texture.anisotropy = 4;
             return texture;
         }
 
-        // Create planet
-        const planetGeometry = new THREE.SphereGeometry(2, 64, 64);
+        // ============ Earth ============
+        // 真实地球贴图（公共 CDN），加载失败时回退到程序化贴图
+        const EARTH_MAP_URL  = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+        const EARTH_BUMP_URL = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
+        const EARTH_LIGHTS_URL = 'https://unpkg.com/three-globe/example/img/earth-night.jpg';
+
+        const planetGeometry = new THREE.SphereGeometry(2, 96, 96);
+
+        // 先用程序化贴图渲染，保证首屏立即有画面
+        const fallbackTexture = createEarthTexture();
         const planetMaterial = new THREE.MeshStandardMaterial({
-            map: createMetalTexture(),
-            normalMap: createNoiseTexture(),
-            normalScale: new THREE.Vector2(0.5, 0.5),
-            roughnessMap: createNoiseTexture(),
-            roughness: 0.6,
-            metalness: 0.9,
-            envMapIntensity: 1.5
+            map: fallbackTexture,
+            roughness: 0.88,
+            metalness: 0.02,
+            envMapIntensity: 0.5
         });
 
         const planet = new THREE.Mesh(planetGeometry, planetMaterial);
         scene.add(planet);
 
-        // Create fragments
+        // 异步加载真实地球贴图，加载成功后替换
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.setCrossOrigin('anonymous');
+
+        textureLoader.load(EARTH_MAP_URL, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.anisotropy = 8;
+            planetMaterial.map = tex;
+            planetMaterial.needsUpdate = true;
+        }, undefined, () => { /* 保留程序化贴图兜底 */ });
+
+        textureLoader.load(EARTH_BUMP_URL, (tex) => {
+            planetMaterial.bumpMap = tex;
+            planetMaterial.bumpScale = 0.04;
+            planetMaterial.needsUpdate = true;
+        }, undefined, () => {});
+
+        // 城市灯光贴图（低强度自发光，仅在暗面隐约可见）
+        textureLoader.load(EARTH_LIGHTS_URL, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            planetMaterial.emissiveMap = tex;
+            planetMaterial.emissive = new THREE.Color(0x556688);
+            planetMaterial.emissiveIntensity = 0.12;
+            planetMaterial.needsUpdate = true;
+        }, undefined, () => {});
+
+        // 大气辉光（边缘光，保持克制）
+        const atmosphereGeometry = new THREE.SphereGeometry(2.14, 96, 96);
+        const atmosphereMaterial = new THREE.MeshBasicMaterial({
+            color: 0x3f7fd0,
+            transparent: true,
+            opacity: 0.10,
+            side: THREE.BackSide,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+        scene.add(atmosphere);
+
+        // Create small satellite fragments (reduced from 50 to 20)
         const fragments = [];
-        const fragmentGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        const fragmentGeometry = new THREE.BoxGeometry(0.08, 0.08, 0.08);
         const fragmentMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8899aa,
-            metalness: 0.8,
-            roughness: 0.4
+            color: 0x667788,
+            metalness: 0.5,
+            roughness: 0.6
         });
 
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 20; i++) {
             const fragment = new THREE.Mesh(fragmentGeometry, fragmentMaterial.clone());
-            
+
             // Position fragments around the planet
-            const radius = 2.3 + Math.random() * 1.5;
+            const radius = 2.6 + Math.random() * 1.8;
             const theta = Math.random() * Math.PI * 2;
             const phi = Math.acos(2 * Math.random() - 1);
-            
+
             fragment.position.x = radius * Math.sin(phi) * Math.cos(theta);
             fragment.position.y = radius * Math.sin(phi) * Math.sin(theta);
             fragment.position.z = radius * Math.cos(phi);
-            
+
             fragment.rotation.set(
                 Math.random() * Math.PI,
                 Math.random() * Math.PI,
                 Math.random() * Math.PI
             );
-            
-            const scale = 0.5 + Math.random() * 2;
-            fragment.scale.set(scale, scale * 0.5, scale * 0.3);
-            
+
+            const scale = 0.4 + Math.random() * 1.2;
+            fragment.scale.set(scale, scale * 0.6, scale * 0.4);
+
             fragment.userData = {
-                originalColor: 0x8899aa,
-                hoverColor: 0x00d4ff,
+                originalColor: 0x667788,
+                hoverColor: 0x88aacc,
                 rotationSpeed: {
-                    x: (Math.random() - 0.5) * 0.02,
-                    y: (Math.random() - 0.5) * 0.02
+                    x: (Math.random() - 0.5) * 0.008,
+                    y: (Math.random() - 0.5) * 0.008
                 },
-                orbitSpeed: 0.001 + Math.random() * 0.002,
+                orbitSpeed: 0.0004 + Math.random() * 0.0008,
                 orbitRadius: radius,
                 orbitAngle: theta,
                 orbitPhi: phi
             };
-            
+
             fragments.push(fragment);
             scene.add(fragment);
         }
 
-        // Create starfield
+        // Create starfield (reduced from 2000 to 800)
         const starGeometry = new THREE.BufferGeometry();
-        const starCount = 2000;
+        const starCount = 800;
         const starPositions = new Float32Array(starCount * 3);
-        
+
         for (let i = 0; i < starCount * 3; i += 3) {
-            starPositions[i] = (Math.random() - 0.5) * 100;
-            starPositions[i + 1] = (Math.random() - 0.5) * 100;
-            starPositions[i + 2] = (Math.random() - 0.5) * 100;
+            starPositions[i] = (Math.random() - 0.5) * 120;
+            starPositions[i + 1] = (Math.random() - 0.5) * 120;
+            starPositions[i + 2] = (Math.random() - 0.5) * 120;
         }
-        
+
         starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
         const starMaterial = new THREE.PointsMaterial({
             color: 0xffffff,
-            size: 0.1,
+            size: 0.08,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.5
         });
         const stars = new THREE.Points(starGeometry, starMaterial);
         scene.add(stars);
@@ -1400,9 +1551,9 @@
 
         // Animation state
         let autoRotate = true;
-        let rotationSpeed = 1.0;
+        let rotationSpeed = 0.5;
         let showFragments = true;
-        let brightness = 0.75;
+        let brightness = 0.6;
 
         // UI Controls
         const rotationToggle = document.getElementById('rotationToggle');
@@ -1436,12 +1587,12 @@
         brightnessSlider.addEventListener('input', (e) => {
             brightness = parseInt(e.target.value) / 100;
             brightnessValue.textContent = e.target.value + '%';
-            ambientLight.intensity = 0.3 + brightness * 0.5;
-            mainLight.intensity = 1 + brightness * 2;
+            ambientLight.intensity = 0.2 + brightness * 0.4;
+            mainLight.intensity = 0.8 + brightness * 1.2;
         });
 
         resetCameraBtn.addEventListener('click', () => {
-            camera.position.set(0, 2, 6);
+            camera.position.set(0, 1.5, 7.5);
             controls.target.set(0, 0, 0);
             controls.update();
         });
@@ -1492,12 +1643,12 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            // Rotate planet
+            // Rotate planet - slower, more subtle
             if (autoRotate) {
-                planet.rotation.y += 0.002 * rotationSpeed;
+                planet.rotation.y += 0.0008 * rotationSpeed;
             }
             
-            // Animate fragments
+            // Animate fragments - slower orbit
             fragments.forEach(fragment => {
                 if (showFragments && fragment.visible) {
                     fragment.rotation.x += fragment.userData.rotationSpeed.x;
@@ -1515,9 +1666,9 @@
                 }
             });
             
-            // Rotate stars slowly
-            stars.rotation.y += 0.0001;
-            stars.rotation.x += 0.00005;
+            // Rotate stars very slowly
+            stars.rotation.y += 0.00005;
+            stars.rotation.x += 0.00002;
             
             // Raycaster hover detection
             raycaster.setFromCamera(mouse, camera);
@@ -1537,7 +1688,7 @@
                 if (hoveredFragment !== fragment) {
                     hoveredFragment = fragment;
                     fragment.material.color.setHex(fragment.userData.hoverColor);
-                    fragment.material.emissive.setHex(0x003344);
+                    fragment.material.emissive.setHex(0x002233);
                     document.body.style.cursor = 'pointer';
                 }
             }

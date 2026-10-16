@@ -1,0 +1,8 @@
+# 避免误提交本机其他目录（曾产生残留 gitlink）
+output/
+phoenix1983413.github.io/
+police-agent-book/
+police-llm-agent/
+dunwise-*/
+
+.DS_Store
